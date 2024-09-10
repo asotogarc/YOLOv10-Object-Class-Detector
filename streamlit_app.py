@@ -1,13 +1,4 @@
-# Python In-built packages
-from pathlib import Path
-import PIL
-
-# External packages
 import streamlit as st
-
-# Local Modules
-import settings
-import helper
 
 # Setting page layout
 st.set_page_config(
@@ -17,7 +8,20 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# CSS to inject contained in a string
+page_bg_img = '''
+<style>
+    body {
+        background-color: #f0f0f0;
+    }
+</style>
+'''
+
+# Inject CSS with markdown
+st.markdown(page_bg_img, unsafe_allow_html=True)
+
 # Main page heading
+st.title("Object Detection using YOLOv8")
 
 # Sidebar
 st.sidebar.header("ML Model Config")
@@ -90,7 +94,6 @@ if source_radio == settings.IMAGE:
                         for box in boxes:
                             st.write(box.data)
                 except Exception as ex:
-                    # st.write(ex)
                     st.write("No image is uploaded yet!")
 
 elif source_radio == settings.VIDEO:
