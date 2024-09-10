@@ -28,9 +28,7 @@ DEFAULT_DETECT_IMAGE = 'office_4_detected.jpg'
 # Videos config
 VIDEO_DIR = ROOT / 'videos'
 VIDEOS_DICT = {
-    'video_1': 'video_1.mp4',
-    'video_2': 'video_2.mp4',
-    'video_3': 'video_3.mp4',
+    'video_1': 'video_4.mp4'
 }
 
 # ML Model config
