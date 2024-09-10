@@ -16,7 +16,138 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+# Estilos personalizados
+st.markdown("""
+    <style>
+    .main {
+        background-color: #99006A ;
+        padding: 2rem;
+        border-radius: 10px;
+    }
+    .stButton>button {
+        width: 100%;
+        border-radius: 20px;
+        background-color: #4CAF50;
+        color: white;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    .stButton>button:hover {
+        background-color: #45a049;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .stDownloadButton>button {
+        width: 100%;
+        border-radius: 20px;
+        background-color: #008CBA;
+        color: white;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    .stDownloadButton>button:hover {
+        background-color: #007B9A;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+        color: #3A5199;
+        font-family: 'Helvetica Neue', sans-serif;
+        text-align: center;
+    }
 
+    h2 {
+    color: #ffffff;
+    font-family: 'Nunito Sans', sans-serif;
+    text-align: center;
+    top: 0; /* Ajusta el valor según tus necesidades */
+
+}
+
+h3 {
+    color: #2F2E33;
+    font-family: 'Helvetica Neue', sans-serif;
+    text-align: center;
+    margin-top: 90px; /* Ajusta el valor según tus necesidades */
+}
+    
+    .stAlert {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+    .info-box {
+    background-color: #d5d6d2;
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 5px;
+    color: #ffffff;
+    width: 300px; /* Ajusta el valor según tus necesidades */
+}
+
+    .success-box {
+        background-color: #ddffdd;
+        border-left: 6px solid #4CAF50;
+        margin-bottom: 15px;
+        padding: 15px;
+        border-radius: 5px;
+        text-align: center;
+        color: black;
+    }
+    .warning-box {
+        background-color: #ffffcc;
+        border-left: 6px solid #ffeb3b;
+        margin-bottom: 15px;
+        padding: 15px;
+        border-radius: 5px;
+    }
+    .dataframe {
+        font-size: 12px;
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .dataframe th, .dataframe td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    .dataframe th {
+        background-color: #f2f2f2;
+        color: #333;
+    }
+    .dataframe tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    .dataframe tr:hover {
+        background-color: #f5f5f5;
+    }
+    .centered-text {
+        text-align: center;
+    }
+    .black-text {
+        color: black;
+    }
+    .factura-details, .asiento-contable, .resumen-general {
+        background-color: #f0f8ff;
+        border: 1px solid #b0d4ff;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        text-align: center;
+        color: black;
+    }
+
+    .reportview-container {
+            margin-top: -2em;
+        }
+        #MainMenu {visibility: hidden;}
+        .stDeployButton {display:none;}
+        footer {visibility: hidden;}
+        #stDecoration {display:none;}
+        header {visibility: hidden;}
+        [data-testid="stToolbar"] {visibility: hidden !important;}
+    </style>
+    """, unsafe_allow_html=True)
 # Main page heading
 
 # Sidebar
