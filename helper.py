@@ -156,9 +156,9 @@ def play_rtsp_stream(conf, model):
             st.sidebar.error("Error loading RTSP stream: " + str(e))
 
 
-def play_webcam(conf, model):
+def play_webcam_streamlit(conf, model):
     """
-    Captures video from webcam and performs object detection in real-time.
+    Captures image from webcam using Streamlit's camera_input and performs object detection.
 
     Parameters:
         conf (float): Confidence threshold for object detection.
@@ -167,62 +167,29 @@ def play_webcam(conf, model):
     Returns:
         None
     """
-    st.header("Webcam Live Feed")
+    st.header("Webcam Object Detection")
     
-    # Initialize webcam
-    vid = cv2.VideoCapture(0)
-    
-    if not vid.isOpened():
-        st.error("Error: Could not open webcam. Please check your webcam connection and permissions.")
-        return
+    img_file_buffer = st.camera_input("Take a picture")
 
-    # Display webcam properties
-    st.write(f"Webcam width: {vid.get(cv2.CAP_PROP_FRAME_WIDTH)}")
-    st.write(f"Webcam height: {vid.get(cv2.CAP_PROP_FRAME_HEIGHT)}")
-    st.write(f"Webcam FPS: {vid.get(cv2.CAP_PROP_FPS)}")
-    
-    # Create a placeholder for the video feed
-    video_placeholder = st.empty()
-    
-    # Create a placeholder for detection results
-    results_placeholder = st.empty()
-    
-    try:
-        while True:
-            ret, frame = vid.read()
-            if not ret:
-                st.error("Failed to capture frame from webcam. Trying to reinitialize...")
-                vid.release()
-                vid = cv2.VideoCapture(0)
-                continue
-            
-            # Perform object detection
-            results = model(frame, conf=conf)
-            
-            # Draw bounding boxes on the frame
-            res_plotted = results[0].plot()
-            
-            # Convert color from BGR to RGB
-            res_plotted_rgb = cv2.cvtColor(res_plotted, cv2.COLOR_BGR2RGB)
-            
-            # Display the frame with detections
-            video_placeholder.image(res_plotted_rgb, channels="RGB", use_column_width=True)
-            
-            # Display detection results
-            results_data = []
+    if img_file_buffer is not None:
+        # Convert image buffer to numpy array
+        bytes_data = img_file_buffer.getvalue()
+        cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
+        
+        # Convert BGR to RGB
+        cv2_img_rgb = cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB)
+        
+        # Perform object detection
+        results = model(cv2_img_rgb, conf=conf)
+        
+        # Plot the detected objects on the image
+        res_plotted = results[0].plot()
+        
+        # Display the image with detected objects
+        st.image(res_plotted, caption="Detected Objects", use_column_width=True)
+        
+        # Display detection results
+        with st.expander("Detection Results"):
             for result in results:
                 for box in result.boxes:
-                    class_id = result.names[int(box.cls)]
-                    confidence = float(box.conf)
-                    results_data.append(f"Class: {class_id}, Confidence: {confidence:.2f}")
-            
-            results_placeholder.write("\n".join(results_data))
-            
-            # Check for 'q' key press to exit
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-    except Exception as e:
-        st.error(f"An error occurred: {str(e)}")
-    finally:
-        # Release the video capture object
-        vid.release()
+                    st.write(f"Class: {model.names[int(box.cls)]}, Confidence: {float(box.conf):.2f}")
