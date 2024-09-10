@@ -101,18 +101,25 @@ elif source_radio == settings.WEBCAM:
     vid_cap = cv2.VideoCapture(0)
     st_frame = st.empty()
 
-    while vid_cap.isOpened():
-        ret, frame = vid_cap.read()
-        if not ret:
-            st.error("Failed to capture image from webcam.")
-            break
+    if not vid_cap.isOpened():
+        st.error("Failed to open webcam.")
+    else:
+        while True:
+            ret, frame = vid_cap.read()
+            if not ret:
+                st.error("Failed to capture image from webcam.")
+                break
 
-        # Perform object detection
-        res = model.predict(frame, conf=confidence)
-        res_plotted = res[0].plot()
+            # Perform object detection
+            res = model.predict(frame, conf=confidence)
+            res_plotted = res[0].plot()
 
-        # Display the frame with detected objects
-        st_frame.image(res_plotted, channels="BGR", use_column_width=True)
+            # Display the frame with detected objects
+            st_frame.image(res_plotted, channels="BGR", use_column_width=True)
+
+            # Add a small delay to prevent high CPU usage
+            if st.button('Stop'):
+                break
 
     vid_cap.release()
 
