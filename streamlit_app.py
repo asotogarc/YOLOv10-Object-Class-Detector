@@ -17,7 +17,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 # Estilos personalizados
-st.markdown("""
+rar = st.markdown("""
     <style>
     .main {
         background-color: #AF4D8D ;
@@ -148,6 +148,7 @@ h3 {
     </style>
     """, unsafe_allow_html=True)
 # Main page heading
+st.markdown(rar, unsafe_allow_html=True)
 
 # Sidebar
 st.sidebar.header("ML Model Config")
