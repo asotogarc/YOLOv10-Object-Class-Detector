@@ -158,58 +158,41 @@ def play_rtsp_stream(conf, model):
 
 def play_webcam(conf, model):
     """
-    Plays a webcam stream. Detects Objects in real-time using the YOLOv8 object detection model.
+    Uses Streamlit's camera input to capture images and perform object detection.
 
     Parameters:
-        conf: Confidence of YOLOv8 model.
-        model: An instance of the `YOLOv8` class containing the YOLOv8 model.
+        conf: Confidence threshold for the YOLO model.
+        model: An instance of the YOLO model.
 
     Returns:
         None
     """
-    source_webcam = settings.WEBCAM_PATH
-    is_display_tracker, tracker = display_tracker_options()
-    
-    if st.sidebar.button('Detect Objects'):
-        try:
-            vid_cap = cv2.VideoCapture(source_webcam)
-            st_frame = st.empty()
-            
-            while vid_cap.isOpened():
-                success, image = vid_cap.read()
-                if success:
-                    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-                    
-                    # Perform object detection
-                    results = model(image, conf=conf, stream=True)
-                    
-                    # Draw bounding boxes and labels on the image
-                    for r in results:
-                        boxes = r.boxes
-                        for box in boxes:
-                            b = box.xyxy[0]  # get box coordinates in (top, left, bottom, right) format
-                            cv2.rectangle(image, 
-                                          (int(b[0]), int(b[1])), 
-                                          (int(b[2]), int(b[3])), 
-                                          (0, 255, 0), 2)
-                            cv2.putText(image, 
-                                        f"{model.names[int(box.cls)]} {float(box.conf):.2f}", 
-                                        (int(b[0]), int(b[1]) - 10), 
-                                        cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-                    
-                    # Display the image
-                    st_frame.image(image, channels="RGB", use_column_width=True)
-                else:
-                    break
-                
-                # Check if the user has clicked the "Stop" button
-                if st.sidebar.button('Stop'):
-                    break
-            
-            vid_cap.release()
-            
-        except Exception as e:
-            st.sidebar.error(f"Error loading video: {str(e)}")
+    st.header("Webcam Live Feed")
+    # Camera input widget
+    img_file_buffer = st.camera_input("Take a picture")
+
+    if img_file_buffer is not None:
+        # To read image file buffer with OpenCV:
+        bytes_data = img_file_buffer.getvalue()
+        cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
+        
+        # Convert from BGR to RGB
+        cv2_img = cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB)
+        
+        # Perform object detection
+        results = model(cv2_img, conf=conf)
+        
+        # Plot the detected objects on the image
+        res_plotted = results[0].plot()
+        
+        # Display the image with detected objects
+        st.image(res_plotted, caption="Detected Objects", use_column_width=True)
+        
+        # Display detection results
+        with st.expander("Detection Results"):
+            for result in results:
+                for box in result.boxes:
+                    st.write(f"Class: {model.names[int(box.cls)]}, Confidence: {float(box.conf):.2f}")
 
 
 def play_stored_video(conf, model):
