@@ -3,7 +3,7 @@ import streamlit as st
 import cv2
 import yt_dlp
 import settings
-
+from PIL import Image
 
 def load_model(model_path):
     """
