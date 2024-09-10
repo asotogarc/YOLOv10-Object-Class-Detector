@@ -18,7 +18,7 @@ WEBCAM = 'Webcam'
 RTSP = 'RTSP'
 YOUTUBE = 'YouTube'
 
-SOURCES_LIST = [IMAGE, WEBCAM, YOUTUBE]
+SOURCES_LIST = [IMAGE, WEBCAM]
 
 # Images config
 IMAGES_DIR = ROOT / 'images'
