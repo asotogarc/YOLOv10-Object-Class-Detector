@@ -2,6 +2,7 @@
 from pathlib import Path
 import PIL
 import streamlit as st
+import cv2
 
 # Local Modules
 import settings
@@ -96,25 +97,24 @@ elif source_radio == settings.VIDEO:
     helper.play_stored_video(confidence, model)
 
 elif source_radio == settings.WEBCAM:
-    # Use st.camera_input to capture webcam input
-    webcam_image = st.camera_input("Capture an image from your webcam")
+    # Use OpenCV to capture webcam input
+    vid_cap = cv2.VideoCapture(0)
+    st_frame = st.empty()
 
-    if webcam_image is not None:
-        st.image(webcam_image, caption='Captured Image', use_column_width=True)
-        if st.sidebar.button('Detect Objects'):
-            res = model.predict(webcam_image,
-                                conf=confidence
-                                )
-            boxes = res[0].boxes
-            res_plotted = res[0].plot()[:, :, ::-1]
-            st.image(res_plotted, caption='Detected Image',
-                     use_column_width=True)
-            try:
-                with st.expander("Detection Results"):
-                    for box in boxes:
-                        st.write(box.data)
-            except Exception as ex:
-                st.write("No image is captured yet!")
+    while vid_cap.isOpened():
+        ret, frame = vid_cap.read()
+        if not ret:
+            st.error("Failed to capture image from webcam.")
+            break
+
+        # Perform object detection
+        res = model.predict(frame, conf=confidence)
+        res_plotted = res[0].plot()
+
+        # Display the frame with detected objects
+        st_frame.image(res_plotted, channels="BGR", use_column_width=True)
+
+    vid_cap.release()
 
 else:
     st.error("Please select a valid source type!")
