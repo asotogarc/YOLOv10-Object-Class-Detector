@@ -163,7 +163,7 @@ def play_rtsp_stream(conf, model):
 def play_webcam(conf, model):
     """
     Captures and processes live video from the webcam using streamlit-webrtc.
-    Detects objects in real-time using the YOLOv8 object detection model.
+    Detects objects in real-time using the YOLOv8 model, optimized for high FPS.
 
     Parameters:
         conf (float): Confidence threshold for the YOLOv8 model.
@@ -173,21 +173,47 @@ def play_webcam(conf, model):
         None
     """
     class VideoProcessor:
+        def __init__(self):
+            self.frame_count = 0
+            self.process_every_n_frames = 5  # Process every 5th frame
+            self.last_result = None
+
         def recv(self, frame):
+            self.frame_count += 1
             img = frame.to_ndarray(format="bgr24")
             
-            # Perform object detection
-            results = model(img, conf=conf)
+            if self.frame_count % self.process_every_n_frames == 0:
+                # Reduce image size for faster processing
+                img_resized = cv2.resize(img, (320, 240))  # Even smaller resolution
+                
+                # Perform object detection
+                results = model(img_resized, conf=conf)
+                
+                # Store the result
+                self.last_result = results[0]
             
-            # Plot the detected objects on the image
-            annotated_frame = results[0].plot()
+            if self.last_result is not None:
+                # Scale bounding boxes to fit the original image size
+                scale_x = img.shape[1] / 320
+                scale_y = img.shape[0] / 240
+                
+                for box in self.last_result.boxes:
+                    x1, y1, x2, y2 = box.xyxy[0]
+                    x1, x2 = int(x1 * scale_x), int(x2 * scale_x)
+                    y1, y2 = int(y1 * scale_y), int(y2 * scale_y)
+                    
+                    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                    
+                    # Add label
+                    label = f"{model.names[int(box.cls)]} {box.conf[0]:.2f}"
+                    cv2.putText(img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             
-            return av.VideoFrame.from_ndarray(annotated_frame, format="bgr24")
+            return av.VideoFrame.from_ndarray(img, format="bgr24")
 
     webrtc_ctx = webrtc_streamer(
         key="object-detection",
         mode=WebRtcMode.SENDRECV,
-        rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
+        rtc_configuration=RTCConfiguration({"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}),
         video_processor_factory=VideoProcessor,
         async_processing=True,
     )
