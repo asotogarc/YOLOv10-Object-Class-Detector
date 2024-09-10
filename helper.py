@@ -5,6 +5,9 @@ import yt_dlp
 import settings
 from PIL import Image
 import numpy as np
+from streamlit_webrtc import webrtc_streamer, WebRtcMode
+import av
+
 
 def load_model(model_path):
     """
@@ -159,7 +162,7 @@ def play_rtsp_stream(conf, model):
 
 def play_webcam(conf, model):
     """
-    Captures and processes live video from the webcam using Streamlit's camera input.
+    Captures and processes live video from the webcam using streamlit-webrtc.
     Detects objects in real-time using the YOLOv8 object detection model.
 
     Parameters:
@@ -169,32 +172,30 @@ def play_webcam(conf, model):
     Returns:
         None
     """
-    st.header("Webcam Live Feed")
+    class VideoProcessor:
+        def recv(self, frame):
+            img = frame.to_ndarray(format="bgr24")
+            
+            # Perform object detection
+            results = model(img, conf=conf)
+            
+            # Plot the detected objects on the image
+            annotated_frame = results[0].plot()
+            
+            return av.VideoFrame.from_ndarray(annotated_frame, format="bgr24")
+
+    webrtc_ctx = webrtc_streamer(
+        key="object-detection",
+        mode=WebRtcMode.SENDRECV,
+        rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
+        video_processor_factory=VideoProcessor,
+        async_processing=True,
+    )
+
+    if webrtc_ctx.video_processor:
+        st.write("El streaming de la cámara web está activo. Los objetos detectados se mostrarán en tiempo real.")
     
-    # Use st.camera_input to capture live video
-    camera_image = st.camera_input("Take a picture")
-
-    if camera_image is not None:
-        # Create a placeholder for the processed image
-        processed_image_placeholder = st.empty()
-
-        # Process the image
-        img = Image.open(camera_image)
-        img_array = np.array(img)
-
-        # Perform object detection
-        results = model.predict(img_array, conf=conf)
-
-        # Plot the detected objects on the image
-        res_plotted = results[0].plot()
-
-        # Display the processed image
-        processed_image_placeholder.image(res_plotted, caption='Processed Image', use_column_width=True)
-
-        # Display detection results
-        with st.expander("Detection Results"):
-            for result in results:
-                st.write(result.boxes.data)
+    st.markdown("Nota: Asegúrate de permitir el acceso a la cámara cuando el navegador lo solicite.")
 
 
 def play_stored_video(conf, model):
