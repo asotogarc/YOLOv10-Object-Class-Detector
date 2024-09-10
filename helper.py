@@ -102,7 +102,7 @@ def play_webcam(conf, model):
             st.sidebar.error("Error loading video: " + str(e))
         
         # Plot the detected objects on the image
-        res_plotted = results[0].plot()
+        res_plotted = results.plot()
         
         # Display the image with detected objects
         st.image(res_plotted, caption="Detected Objects", use_column_width=True)
