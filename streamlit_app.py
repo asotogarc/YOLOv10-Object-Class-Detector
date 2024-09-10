@@ -98,7 +98,8 @@ elif source_radio == settings.VIDEO:
     helper.play_stored_video(confidence, model)
 
 elif source_radio == settings.WEBCAM:
-    helper.play_webcam(confidence, model)
+        helper.play_webcam_streamlit(confidence, model)
+
 
 elif source_radio == settings.RTSP:
     helper.play_rtsp_stream(confidence, model)
