@@ -158,7 +158,8 @@ def play_rtsp_stream(conf, model):
 
 def play_webcam(conf, model):
     """
-    Plays a webcam stream. Detects Objects in real-time using the YOLOv8 object detection model.
+    Uses Streamlit's camera input to capture images and detect objects in real-time
+    using the YOLOv8 object detection model.
 
     Parameters:
         conf: Confidence of YOLOv8 model.
@@ -170,70 +171,29 @@ def play_webcam(conf, model):
     Raises:
         None
     """
-    source_webcam = settings.WEBCAM_PATH
     is_display_tracker, tracker = display_tracker_options()
+    
+    st.sidebar.write("Click the 'Detect Objects' button after taking a picture.")
+    
     if st.sidebar.button('Detect Objects'):
-        try:
-            vid_cap = cv2.VideoCapture(source_webcam)
+        picture = st.camera_input("Take a picture")
+        
+        if picture is not None:
+            st.sidebar.success("Picture captured successfully!")
+            
+            # Convert the picture to a numpy array
+            image = Image.open(picture)
+            image_array = np.array(image)
+            
+            # Create a placeholder for the detected frame
             st_frame = st.empty()
-            while (vid_cap.isOpened()):
-                success, image = vid_cap.read()
-                if success:
-                    _display_detected_frames(conf,
-                                             model,
-                                             st_frame,
-                                             image,
-                                             is_display_tracker,
-                                             tracker,
-                                             )
-                else:
-                    vid_cap.release()
-                    break
-        except Exception as e:
-            st.sidebar.error("Error loading video: " + str(e))
-
-
-def play_stored_video(conf, model):
-    """
-    Plays a stored video file. Tracks and detects objects in real-time using the YOLOv8 object detection model.
-
-    Parameters:
-        conf: Confidence of YOLOv8 model.
-        model: An instance of the `YOLOv8` class containing the YOLOv8 model.
-
-    Returns:
-        None
-
-    Raises:
-        None
-    """
-    source_vid = st.sidebar.selectbox(
-        "Choose a video...", settings.VIDEOS_DICT.keys())
-
-    is_display_tracker, tracker = display_tracker_options()
-
-    with open(settings.VIDEOS_DICT.get(source_vid), 'rb') as video_file:
-        video_bytes = video_file.read()
-    if video_bytes:
-        st.video(video_bytes)
-
-    if st.sidebar.button('Detect Video Objects'):
-        try:
-            vid_cap = cv2.VideoCapture(
-                str(settings.VIDEOS_DICT.get(source_vid)))
-            st_frame = st.empty()
-            while (vid_cap.isOpened()):
-                success, image = vid_cap.read()
-                if success:
-                    _display_detected_frames(conf,
-                                             model,
-                                             st_frame,
-                                             image,
-                                             is_display_tracker,
-                                             tracker
-                                             )
-                else:
-                    vid_cap.release()
-                    break
-        except Exception as e:
-            st.sidebar.error("Error loading video: " + str(e))
+            
+            # Display the detected objects
+            _display_detected_frames(conf,
+                                     model,
+                                     st_frame,
+                                     image_array,
+                                     is_display_tracker,
+                                     tracker)
+        else:
+            st.sidebar.error("No picture captured. Please try again.")
