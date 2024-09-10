@@ -144,7 +144,6 @@ h3 {
         .stDeployButton {display:none;}
         footer {visibility: hidden;}
         #stDecoration {display:none;}
-        header {visibility: hidden;}
         [data-testid="stToolbar"] {visibility: hidden !important;}
     </style>
     """, unsafe_allow_html=True)
