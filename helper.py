@@ -172,43 +172,57 @@ def play_webcam(conf, model):
     # Initialize webcam
     vid = cv2.VideoCapture(0)
     
+    if not vid.isOpened():
+        st.error("Error: Could not open webcam. Please check your webcam connection and permissions.")
+        return
+
+    # Display webcam properties
+    st.write(f"Webcam width: {vid.get(cv2.CAP_PROP_FRAME_WIDTH)}")
+    st.write(f"Webcam height: {vid.get(cv2.CAP_PROP_FRAME_HEIGHT)}")
+    st.write(f"Webcam FPS: {vid.get(cv2.CAP_PROP_FPS)}")
+    
     # Create a placeholder for the video feed
     video_placeholder = st.empty()
     
     # Create a placeholder for detection results
     results_placeholder = st.empty()
     
-    while True:
-        ret, frame = vid.read()
-        if not ret:
-            st.error("Failed to capture frame from webcam.")
-            break
-        
-        # Perform object detection
-        results = model(frame, conf=conf)
-        
-        # Draw bounding boxes on the frame
-        res_plotted = results[0].plot()
-        
-        # Convert color from BGR to RGB
-        res_plotted_rgb = cv2.cvtColor(res_plotted, cv2.COLOR_BGR2RGB)
-        
-        # Display the frame with detections
-        video_placeholder.image(res_plotted_rgb, channels="RGB", use_column_width=True)
-        
-        # Display detection results
-        results_data = []
-        for result in results:
-            for box in result.boxes:
-                class_id = result.names[int(box.cls)]
-                confidence = float(box.conf)
-                results_data.append(f"Class: {class_id}, Confidence: {confidence:.2f}")
-        
-        results_placeholder.write("\n".join(results_data))
-        
-        # Check for 'q' key press to exit
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-    
-    # Release the video capture object
-    vid.release()
+    try:
+        while True:
+            ret, frame = vid.read()
+            if not ret:
+                st.error("Failed to capture frame from webcam. Trying to reinitialize...")
+                vid.release()
+                vid = cv2.VideoCapture(0)
+                continue
+            
+            # Perform object detection
+            results = model(frame, conf=conf)
+            
+            # Draw bounding boxes on the frame
+            res_plotted = results[0].plot()
+            
+            # Convert color from BGR to RGB
+            res_plotted_rgb = cv2.cvtColor(res_plotted, cv2.COLOR_BGR2RGB)
+            
+            # Display the frame with detections
+            video_placeholder.image(res_plotted_rgb, channels="RGB", use_column_width=True)
+            
+            # Display detection results
+            results_data = []
+            for result in results:
+                for box in result.boxes:
+                    class_id = result.names[int(box.cls)]
+                    confidence = float(box.conf)
+                    results_data.append(f"Class: {class_id}, Confidence: {confidence:.2f}")
+            
+            results_placeholder.write("\n".join(results_data))
+            
+            # Check for 'q' key press to exit
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+    except Exception as e:
+        st.error(f"An error occurred: {str(e)}")
+    finally:
+        # Release the video capture object
+        vid.release()
