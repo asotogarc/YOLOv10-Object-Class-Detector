@@ -1,8 +1,9 @@
+# Python In-built packages
 from pathlib import Path
+import PIL
+
+# External packages
 import streamlit as st
-import av
-import numpy as np
-from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
 # Local Modules
 import settings
@@ -78,7 +79,7 @@ if source_radio == settings.IMAGE:
                      use_column_width=True)
         else:
             if st.sidebar.button('Detect Objects'):
-                res = model.predict(np.array(uploaded_image),
+                res = model.predict(uploaded_image,
                                     conf=confidence
                                     )
                 boxes = res[0].boxes
@@ -97,17 +98,13 @@ elif source_radio == settings.VIDEO:
     helper.play_stored_video(confidence, model)
 
 elif source_radio == settings.WEBCAM:
-    class VideoTransformer(VideoTransformerBase):
-        def __init__(self):
-            self.model = model
+    helper.play_webcam(confidence, model)
 
-        def transform(self, frame):
-            img = frame.to_ndarray(format="bgr24")
-            res = self.model.predict(img, conf=confidence)
-            res_plotted = res[0].plot()
-            return av.VideoFrame.from_ndarray(res_plotted, format="bgr24")
+elif source_radio == settings.RTSP:
+    helper.play_rtsp_stream(confidence, model)
 
-    webrtc_streamer(key="example", video_transformer_factory=VideoTransformer)
+elif source_radio == settings.YOUTUBE:
+    helper.play_youtube_video(confidence, model)
 
 else:
     st.error("Please select a valid source type!")
