@@ -3,7 +3,8 @@ import streamlit as st
 import cv2
 import yt_dlp
 import settings
-
+from PIL import Image
+import numpy as np
 
 def load_model(model_path):
     """
@@ -158,39 +159,42 @@ def play_rtsp_stream(conf, model):
 
 def play_webcam(conf, model):
     """
-    Plays a webcam stream. Detects Objects in real-time using the YOLOv8 object detection model.
+    Captures and processes live video from the webcam using Streamlit's camera input.
+    Detects objects in real-time using the YOLOv8 object detection model.
 
     Parameters:
-        conf: Confidence of YOLOv8 model.
-        model: An instance of the `YOLOv8` class containing the YOLOv8 model.
+        conf (float): Confidence threshold for the YOLOv8 model.
+        model (YOLO): An instance of the YOLO class containing the YOLOv8 model.
 
     Returns:
         None
-
-    Raises:
-        None
     """
-    source_webcam = settings.WEBCAM_PATH
-    is_display_tracker, tracker = display_tracker_options()
-    if st.sidebar.button('Detect Objects'):
-        try:
-            vid_cap = cv2.VideoCapture(source_webcam)
-            st_frame = st.empty()
-            while (vid_cap.isOpened()):
-                success, image = vid_cap.read()
-                if success:
-                    _display_detected_frames(conf,
-                                             model,
-                                             st_frame,
-                                             image,
-                                             is_display_tracker,
-                                             tracker,
-                                             )
-                else:
-                    vid_cap.release()
-                    break
-        except Exception as e:
-            st.sidebar.error("Error loading video: " + str(e))
+    st.header("Webcam Live Feed")
+    
+    # Use st.camera_input to capture live video
+    camera_image = st.camera_input("Take a picture")
+
+    if camera_image is not None:
+        # Create a placeholder for the processed image
+        processed_image_placeholder = st.empty()
+
+        # Process the image
+        img = Image.open(camera_image)
+        img_array = np.array(img)
+
+        # Perform object detection
+        results = model.predict(img_array, conf=conf)
+
+        # Plot the detected objects on the image
+        res_plotted = results[0].plot()
+
+        # Display the processed image
+        processed_image_placeholder.image(res_plotted, caption='Processed Image', use_column_width=True)
+
+        # Display detection results
+        with st.expander("Detection Results"):
+            for result in results:
+                st.write(result.boxes.data)
 
 
 def play_stored_video(conf, model):
