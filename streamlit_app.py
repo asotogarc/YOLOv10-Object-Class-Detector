@@ -20,7 +20,7 @@ st.set_page_config(
 st.markdown("""
     <style>
     .main {
-        background-color: #99006A ;
+        background-color: #AF4D8D ;
         padding: 2rem;
         border-radius: 10px;
     }
