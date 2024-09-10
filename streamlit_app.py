@@ -16,7 +16,28 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+# Estilos personalizados
+st.markdown("""
+    <style>
+    .main {
+        background-color: #AF4D8D ;
+        padding: 2rem;
+        border-radius: 10px;
+    }
+    
+        #MainMenu {visibility: hidden;}
+        .stDeployButton {display:none;}
+        footer {visibility: hidden;}
+        #stDecoration {display:none;}
+        header {visibility: hidden;}
+        [data-testid="stToolbar"] {visibility: hidden !important;}
+    </style>
+    """, unsafe_allow_html=True)
 
+# Título
+
+# Descripción
+# Descripción
 # Main page heading
 st.title("Object Detection And Tracking using YOLOv8")
 
