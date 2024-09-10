@@ -1,7 +1,6 @@
-# Python In-built packages
+# Importar el método st.camera_input
 from pathlib import Path
 import PIL
-# External packages
 import streamlit as st
 
 # Local Modules
@@ -97,11 +96,25 @@ elif source_radio == settings.VIDEO:
     helper.play_stored_video(confidence, model)
 
 elif source_radio == settings.WEBCAM:
-    helper.play_webcam(confidence, model)
+    # Use st.camera_input to capture webcam input
+    webcam_image = st.camera_input("Capture an image from your webcam")
 
-
-
-
+    if webcam_image is not None:
+        st.image(webcam_image, caption='Captured Image', use_column_width=True)
+        if st.sidebar.button('Detect Objects'):
+            res = model.predict(webcam_image,
+                                conf=confidence
+                                )
+            boxes = res[0].boxes
+            res_plotted = res[0].plot()[:, :, ::-1]
+            st.image(res_plotted, caption='Detected Image',
+                     use_column_width=True)
+            try:
+                with st.expander("Detection Results"):
+                    for box in boxes:
+                        st.write(box.data)
+            except Exception as ex:
+                st.write("No image is captured yet!")
 
 else:
     st.error("Please select a valid source type!")
