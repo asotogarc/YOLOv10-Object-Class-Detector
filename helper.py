@@ -183,23 +183,14 @@ def play_webcam(conf, model):
         # Perform object detection
         results = model(cv2_img_rgb, conf=conf)
         
-        # Check if any objects were detected
-        if len(results) > 0 and len(results[0].boxes) > 0:
-            # Plot the detected objects on the image
-            res_plotted = results[0].plot()
-            
-            # Display the image with detected objects
-            st.image(res_plotted, caption="Detected Objects", use_column_width=True)
-            
-            # Display detection results
-            with st.expander("Detection Results"):
-                for result in results:
-                    for box in result.boxes:
-                        st.write(f"Class: {model.names[int(box.cls)]}, Confidence: {float(box.conf):.2f}")
-        else:
-            st.image(cv2_img_rgb, caption="No objects detected", use_column_width=True)
-            st.write("No objects were detected in this image.")
+        # Plot the detected objects on the image
+        res_plotted = results[0].plot()
         
-        # Debug information
-        st.write(f"Confidence threshold: {conf}")
-        st.write(f"Number of detections: {len(results[0].boxes)}")
+        # Display the image with detected objects
+        st.image(res_plotted, caption="Detected Objects", use_column_width=True)
+        
+        # Display detection results
+        with st.expander("Detection Results"):
+            for result in results:
+                for box in result.boxes:
+                    st.write(f"Class: {model.names[int(box.cls)]}, Confidence: {float(box.conf):.2f}")
