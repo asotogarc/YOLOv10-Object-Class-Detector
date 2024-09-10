@@ -3,7 +3,7 @@ import streamlit as st
 import cv2
 import yt_dlp
 import settings
-
+import numpy as np
 
 def load_model(model_path):
     """
@@ -161,26 +161,27 @@ def play_webcam(conf, model):
     Uses Streamlit's camera input to capture images and perform object detection.
 
     Parameters:
-        conf: Confidence threshold for the YOLO model.
-        model: An instance of the YOLO model.
+        conf (float): Confidence threshold for object detection.
+        model (YOLO): An instance of the YOLO model.
 
     Returns:
         None
     """
-    st.header("Webcam Live Feed")
+    st.header("Webcam Object Detection")
+    
     # Camera input widget
     img_file_buffer = st.camera_input("Take a picture")
 
     if img_file_buffer is not None:
-        # To read image file buffer with OpenCV:
+        # Convert image buffer to numpy array
         bytes_data = img_file_buffer.getvalue()
         cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
         
-        # Convert from BGR to RGB
-        cv2_img = cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB)
+        # Convert BGR to RGB
+        cv2_img_rgb = cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB)
         
         # Perform object detection
-        results = model(cv2_img, conf=conf)
+        results = model(cv2_img_rgb, conf=conf)
         
         # Plot the detected objects on the image
         res_plotted = results[0].plot()
@@ -194,48 +195,3 @@ def play_webcam(conf, model):
                 for box in result.boxes:
                     st.write(f"Class: {model.names[int(box.cls)]}, Confidence: {float(box.conf):.2f}")
 
-
-def play_stored_video(conf, model):
-    """
-    Plays a stored video file. Tracks and detects objects in real-time using the YOLOv8 object detection model.
-
-    Parameters:
-        conf: Confidence of YOLOv8 model.
-        model: An instance of the `YOLOv8` class containing the YOLOv8 model.
-
-    Returns:
-        None
-
-    Raises:
-        None
-    """
-    source_vid = st.sidebar.selectbox(
-        "Choose a video...", settings.VIDEOS_DICT.keys())
-
-    is_display_tracker, tracker = display_tracker_options()
-
-    with open(settings.VIDEOS_DICT.get(source_vid), 'rb') as video_file:
-        video_bytes = video_file.read()
-    if video_bytes:
-        st.video(video_bytes)
-
-    if st.sidebar.button('Detect Video Objects'):
-        try:
-            vid_cap = cv2.VideoCapture(
-                str(settings.VIDEOS_DICT.get(source_vid)))
-            st_frame = st.empty()
-            while (vid_cap.isOpened()):
-                success, image = vid_cap.read()
-                if success:
-                    _display_detected_frames(conf,
-                                             model,
-                                             st_frame,
-                                             image,
-                                             is_display_tracker,
-                                             tracker
-                                             )
-                else:
-                    vid_cap.release()
-                    break
-        except Exception as e:
-            st.sidebar.error("Error loading video: " + str(e))
