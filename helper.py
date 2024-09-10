@@ -166,31 +166,50 @@ def play_webcam(conf, model):
 
     Returns:
         None
-
-    Raises:
-        None
     """
     source_webcam = settings.WEBCAM_PATH
     is_display_tracker, tracker = display_tracker_options()
+    
     if st.sidebar.button('Detect Objects'):
         try:
             vid_cap = cv2.VideoCapture(source_webcam)
             st_frame = st.empty()
-            while (vid_cap.isOpened()):
+            
+            while vid_cap.isOpened():
                 success, image = vid_cap.read()
                 if success:
-                    _display_detected_frames(conf,
-                                             model,
-                                             st_frame,
-                                             image,
-                                             is_display_tracker,
-                                             tracker,
-                                             )
+                    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                    
+                    # Perform object detection
+                    results = model(image, conf=conf, stream=True)
+                    
+                    # Draw bounding boxes and labels on the image
+                    for r in results:
+                        boxes = r.boxes
+                        for box in boxes:
+                            b = box.xyxy[0]  # get box coordinates in (top, left, bottom, right) format
+                            cv2.rectangle(image, 
+                                          (int(b[0]), int(b[1])), 
+                                          (int(b[2]), int(b[3])), 
+                                          (0, 255, 0), 2)
+                            cv2.putText(image, 
+                                        f"{model.names[int(box.cls)]} {float(box.conf):.2f}", 
+                                        (int(b[0]), int(b[1]) - 10), 
+                                        cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                    
+                    # Display the image
+                    st_frame.image(image, channels="RGB", use_column_width=True)
                 else:
-                    vid_cap.release()
                     break
+                
+                # Check if the user has clicked the "Stop" button
+                if st.sidebar.button('Stop'):
+                    break
+            
+            vid_cap.release()
+            
         except Exception as e:
-            st.sidebar.error("Error loading video: " + str(e))
+            st.sidebar.error(f"Error loading video: {str(e)}")
 
 
 def play_stored_video(conf, model):
