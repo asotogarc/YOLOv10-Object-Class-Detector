@@ -2,6 +2,7 @@
 from pathlib import Path
 import PIL
 import streamlit as st
+import numpy as np
 
 # Local Modules
 import settings
@@ -77,7 +78,7 @@ if source_radio == settings.IMAGE:
                      use_column_width=True)
         else:
             if st.sidebar.button('Detect Objects'):
-                res = model.predict(uploaded_image,
+                res = model.predict(np.array(uploaded_image),
                                     conf=confidence
                                     )
                 boxes = res[0].boxes
