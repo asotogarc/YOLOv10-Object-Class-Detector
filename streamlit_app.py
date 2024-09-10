@@ -1,8 +1,8 @@
-# Importar el método st.camera_input
 from pathlib import Path
-import PIL
 import streamlit as st
+import av
 import numpy as np
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
 # Local Modules
 import settings
@@ -97,20 +97,17 @@ elif source_radio == settings.VIDEO:
     helper.play_stored_video(confidence, model)
 
 elif source_radio == settings.WEBCAM:
-    # Use st.camera_input to capture webcam input
-    webcam_image = st.camera_input("Capture an image from your webcam")
+    class VideoTransformer(VideoTransformerBase):
+        def __init__(self):
+            self.model = model
 
-    if webcam_image is not None:
-        # Convert the image to an OpenCV format
-        image = PIL.Image.open(webcam_image)
-        image = np.array(image)
+        def transform(self, frame):
+            img = frame.to_ndarray(format="bgr24")
+            res = self.model.predict(img, conf=confidence)
+            res_plotted = res[0].plot()
+            return av.VideoFrame.from_ndarray(res_plotted, format="bgr24")
 
-        # Perform object detection
-        res = model.predict(image, conf=confidence)
-        res_plotted = res[0].plot()
-
-        # Display the frame with detected objects
-        st.image(res_plotted, caption='Detected Image', use_column_width=True)
+    webrtc_streamer(key="example", video_transformer_factory=VideoTransformer)
 
 else:
     st.error("Please select a valid source type!")
