@@ -65,31 +65,41 @@ def _display_detected_frames(conf, model, st_frame, image, is_display_tracking=N
 
 
 
-def play_webcam_streamlit(conf, model):
+def play_webcam(conf, model):
     """
-    Captures image from webcam using Streamlit's camera_input and performs object detection.
+    Plays a webcam stream. Detects Objects in real-time using the YOLOv8 object detection model.
 
     Parameters:
-        conf (float): Confidence threshold for object detection.
-        model (YOLO): An instance of the YOLO model.
+        conf: Confidence of YOLOv8 model.
+        model: An instance of the `YOLOv8` class containing the YOLOv8 model.
 
     Returns:
         None
-    """
-    st.header("Webcam Object Detection")
-    
-    img_file_buffer = st.camera_input("Take a picture")
 
-    if img_file_buffer is not None:
-        # Convert image buffer to numpy array
-        bytes_data = img_file_buffer.getvalue()
-        cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
-        
-        # Convert BGR to RGB
-        cv2_img_rgb = cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB)
-        
-        # Perform object detection
-        results = model(cv2_img_rgb, conf=conf)
+    Raises:
+        None
+    """
+    source_webcam = settings.WEBCAM_PATH
+    is_display_tracker, tracker = display_tracker_options()
+    if st.sidebar.button('Detect Objects'):
+        try:
+            vid_cap = cv2.VideoCapture(source_webcam)
+            st_frame = st.empty()
+            while (vid_cap.isOpened()):
+                success, image = vid_cap.read()
+                if success:
+                    _display_detected_frames(conf,
+                                             model,
+                                             st_frame,
+                                             image,
+                                             is_display_tracker,
+                                             tracker,
+                                             )
+                else:
+                    vid_cap.release()
+                    break
+        except Exception as e:
+            st.sidebar.error("Error loading video: " + str(e))
         
         # Plot the detected objects on the image
         res_plotted = results[0].plot()
