@@ -218,8 +218,6 @@ def play_webcam(conf, model):
             
             return av.VideoFrame.from_ndarray(annotated_frame, format="bgr24")
 
-    # Rest of the function remains the same
-
     webrtc_ctx = webrtc_streamer(
         key="object-detection",
         mode=WebRtcMode.SENDRECV,
