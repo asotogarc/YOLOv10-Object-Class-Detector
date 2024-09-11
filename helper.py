@@ -20,21 +20,20 @@ etiquetas_es = {
     'boat': 'barco',
     # Añade más traducciones según sea necesario
 }
-def load_model(model_path):
+def load_model(model_path, yaml_path):
     """
-    Loads a YOLO object detection model from the specified model_path
-    and translates its labels to Spanish.
+    Carga un modelo de detección de objetos YOLO desde el model_path especificado
+    y usa las etiquetas en español del archivo YAML.
     
-    Parameters:
-        model_path (str): The path to the YOLO model file.
-    Returns:
-        A YOLO object detection model with Spanish labels.
+    Parámetros:
+        model_path (str): La ruta al archivo del modelo YOLO.
+        yaml_path (str): La ruta al archivo YAML con las etiquetas en español.
+    Retorna:
+        Un modelo de detección de objetos YOLO con etiquetas en español.
     """
+    # Cargar el modelo con el archivo YAML personalizado
     model = YOLO(model_path)
-    
-    # Traducir las etiquetas
-    if hasattr(model, 'names'):
-        model.names = {i: etiquetas_es.get(name, name) for i, name in model.names.items()}
+    model.names = model.yaml_load(yaml_path)['names']
     
     return model
 
