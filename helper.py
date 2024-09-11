@@ -8,6 +8,33 @@ import numpy as np
 from streamlit_webrtc import webrtc_streamer, WebRtcMode
 import av
 
+TRANSLATIONS = {
+    'person': 'persona',
+    'bicycle': 'bicicleta',
+    'car': 'coche',
+    'motorcycle': 'motocicleta',
+    'airplane': 'avión',
+    'bus': 'autobús',
+    'train': 'tren',
+    'truck': 'camión',
+    'boat': 'barco',
+    'traffic light': 'semáforo',
+    'fire hydrant': 'hidrante',
+    'stop sign': 'señal de stop',
+    'parking meter': 'parquímetro',
+    'bench': 'banco',
+    'bird': 'pájaro',
+    'cat': 'gato',
+    'dog': 'perro',
+    'horse': 'caballo',
+    'sheep': 'oveja',
+    'cow': 'vaca',
+    'elephant': 'elefante',
+    'bear': 'oso',
+    'zebra': 'cebra',
+    'giraffe': 'jirafa',
+    # Añade más traducciones según sea necesario
+}
 
 def load_model(model_path):
     """
@@ -57,10 +84,19 @@ def _display_detected_frames(conf, model, st_frame, image, is_display_tracking=N
         # Predict the objects in the image using the YOLOv8 model
         res = model.predict(image, conf=conf)
 
-    # # Plot the detected objects on the video frame
+    # Translate labels to Spanish
+    for r in res:
+        for box in r.boxes:
+            class_id = int(box.cls[0])
+            original_name = model.names[class_id]
+            translated_name = TRANSLATIONS.get(original_name.lower(), original_name)
+            box.cls[0] = list(TRANSLATIONS.keys()).index(original_name.lower())
+            model.names[int(box.cls[0])] = translated_name
+
+    # Plot the detected objects on the video frame
     res_plotted = res[0].plot()
     st_frame.image(res_plotted,
-                   caption='Detected Video',
+                   caption='Video Detectado',
                    channels="BGR",
                    use_column_width=True
                    )
@@ -161,17 +197,6 @@ def play_rtsp_stream(conf, model):
 
 
 def play_webcam(conf, model):
-    """
-    Captures and processes live video from the webcam using streamlit-webrtc.
-    Detects objects in real-time using the YOLOv8 object detection model.
-
-    Parameters:
-        conf (float): Confidence threshold for the YOLOv8 model.
-        model (YOLO): An instance of the YOLO class containing the YOLOv8 model.
-
-    Returns:
-        None
-    """
     class VideoProcessor:
         def recv(self, frame):
             img = frame.to_ndarray(format="bgr24")
@@ -179,10 +204,21 @@ def play_webcam(conf, model):
             # Perform object detection
             results = model(img, conf=conf)
             
+            # Translate labels to Spanish
+            for r in results:
+                for box in r.boxes:
+                    class_id = int(box.cls[0])
+                    original_name = model.names[class_id]
+                    translated_name = TRANSLATIONS.get(original_name.lower(), original_name)
+                    box.cls[0] = list(TRANSLATIONS.keys()).index(original_name.lower())
+                    model.names[int(box.cls[0])] = translated_name
+            
             # Plot the detected objects on the image
             annotated_frame = results[0].plot()
             
             return av.VideoFrame.from_ndarray(annotated_frame, format="bgr24")
+
+    # Rest of the function remains the same
 
     webrtc_ctx = webrtc_streamer(
         key="object-detection",
