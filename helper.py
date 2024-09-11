@@ -7,9 +7,6 @@ from PIL import Image
 import numpy as np
 from streamlit_webrtc import webrtc_streamer, WebRtcMode
 import av
-import logging
-logging.basicConfig(level=logging.INFO)
-
 
 TRANSLATIONS = {
     'person': 'persona',
@@ -199,72 +196,29 @@ def play_rtsp_stream(conf, model):
             st.sidebar.error("Error loading RTSP stream: " + str(e))
 
 
-import logging
-from typing import Dict, Any
-
-logging.basicConfig(level=logging.INFO)
-
-def play_webcam(conf, model_path):
+def play_webcam(conf, model):
     class VideoProcessor:
-        def __init__(self):
-            self.TRANSLATIONS = {
-                'person': 'persona',
-                'bicycle': 'bicicleta',
-                'car': 'coche',
-                'motorcycle': 'motocicleta',
-                'airplane': 'avión',
-                'bus': 'autobús',
-                'train': 'tren',
-                'truck': 'camión',
-                'boat': 'barco',
-                'traffic light': 'semáforo',
-                'fire hydrant': 'hidrante',
-                'stop sign': 'señal de stop',
-                'parking meter': 'parquímetro',
-                'bench': 'banco',
-                'bird': 'pájaro',
-                'cat': 'gato',
-                'dog': 'perro',
-                'horse': 'caballo',
-                'sheep': 'oveja',
-                'cow': 'vaca',
-                'elephant': 'elefante',
-                'bear': 'oso',
-                'zebra': 'cebra',
-                'giraffe': 'jirafa',
-                'couch': 'sofá',
-                # Añade más traducciones según sea necesario
-            }
-            self.model = YOLO(model_path)
-            logging.info(f"Model loaded from {model_path}")
-
-        def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
+        def recv(self, frame):
             img = frame.to_ndarray(format="bgr24")
-            logging.info(f"Processing frame of shape {img.shape}")
             
             # Perform object detection
-            results = self.model(img, conf=conf)
-            logging.info(f"Detection results: {results}")
+            results = model(img, conf=conf)
             
-            if len(results) > 0 and len(results[0].boxes) > 0:
-                # Translate labels to Spanish and draw bounding boxes
-                for r in results:
-                    boxes = r.boxes
-                    for box in boxes:
-                        b = box.xyxy[0].tolist()
-                        class_id = int(box.cls[0])
-                        original_name = self.model.names[class_id].lower()
-                        translated_name = self.TRANSLATIONS.get(original_name, original_name)
-                        conf_score = float(box.conf[0])
-                        logging.info(f"Detected: {original_name} -> {translated_name} ({conf_score:.2f})")
-                        
-                        img = cv2.rectangle(img, (int(b[0]), int(b[1])), (int(b[2]), int(b[3])), (0, 255, 0), 2)
-                        img = cv2.putText(img, f"{translated_name} {conf_score:.2f}", 
-                                          (int(b[0]), int(b[1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-            else:
-                logging.info("No objects detected in this frame")
+            # Translate labels to Spanish
+            for r in results:
+                for box in r.boxes:
+                    class_id = int(box.cls[0])
+                    original_name = model.names[class_id]
+                    translated_name = TRANSLATIONS.get(original_name.lower(), original_name)
+                    box.cls[0] = list(TRANSLATIONS.keys()).index(original_name.lower())
+                    model.names[int(box.cls[0])] = translated_name
+            
+            # Plot the detected objects on the image
+            annotated_frame = results[0].plot()
+            
+            return av.VideoFrame.from_ndarray(annotated_frame, format="bgr24")
 
-            return av.VideoFrame.from_ndarray(img, format="bgr24")
+    # Rest of the function remains the same
 
     webrtc_ctx = webrtc_streamer(
         key="object-detection",
@@ -276,8 +230,6 @@ def play_webcam(conf, model_path):
 
     if webrtc_ctx.video_processor:
         st.write("El streaming de la cámara web está activo. Los objetos detectados se mostrarán en tiempo real.")
-    else:
-        st.error("Error al iniciar el procesador de video. Por favor, recarga la página.")
     
     st.markdown("Nota: Asegúrate de permitir el acceso a la cámara cuando el navegador lo solicite.")
 
