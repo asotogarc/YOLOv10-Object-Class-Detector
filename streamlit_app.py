@@ -57,7 +57,7 @@ elif model_type == 'Segmentation':
 
 # Load Pre-trained ML Model
 try:
-    model = helper.load_model(model_path,"yolov8n-es.yaml")
+    model = helper.load_model(model_path)
 
 except Exception as ex:
     st.error(f"Unable to load model. Check the specified path: {model_path}")
