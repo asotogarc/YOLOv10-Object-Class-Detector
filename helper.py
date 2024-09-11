@@ -8,18 +8,34 @@ import numpy as np
 from streamlit_webrtc import webrtc_streamer, WebRtcMode
 import av
 
-
+etiquetas_es = {
+    'person': 'persona',
+    'bicycle': 'bicicleta',
+    'car': 'coche',
+    'motorcycle': 'motocicleta',
+    'airplane': 'avión',
+    'bus': 'autobús',
+    'train': 'tren',
+    'truck': 'camión',
+    'boat': 'barco',
+    # Añade más traducciones según sea necesario
+}
 def load_model(model_path):
     """
-    Loads a YOLO object detection model from the specified model_path.
-
+    Loads a YOLO object detection model from the specified model_path
+    and translates its labels to Spanish.
+    
     Parameters:
         model_path (str): The path to the YOLO model file.
-
     Returns:
-        A YOLO object detection model.
+        A YOLO object detection model with Spanish labels.
     """
     model = YOLO(model_path)
+    
+    # Traducir las etiquetas
+    if hasattr(model, 'names'):
+        model.names = {i: etiquetas_es.get(name, name) for i, name in model.names.items()}
+    
     return model
 
 
