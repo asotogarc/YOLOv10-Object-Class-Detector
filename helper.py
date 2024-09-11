@@ -7,8 +7,6 @@ from PIL import Image
 import numpy as np
 from streamlit_webrtc import webrtc_streamer, WebRtcMode
 import av
-import logging
-logging.basicConfig(level=logging.INFO)
 
 TRANSLATIONS = {
     'person': 'persona',
@@ -198,30 +196,72 @@ def play_rtsp_stream(conf, model):
             st.sidebar.error("Error loading RTSP stream: " + str(e))
 
 
+import logging
+from typing import Dict, Any
+
+logging.basicConfig(level=logging.INFO)
+
 def play_webcam(conf, model):
     class VideoProcessor:
-        def recv(self, frame):
+        def __init__(self):
+            self.TRANSLATIONS: Dict[str, str] = {
+                'person': 'persona',
+                'bicycle': 'bicicleta',
+                'car': 'coche',
+                'motorcycle': 'motocicleta',
+                'airplane': 'avión',
+                'bus': 'autobús',
+                'train': 'tren',
+                'truck': 'camión',
+                'boat': 'barco',
+                'traffic light': 'semáforo',
+                'fire hydrant': 'hidrante',
+                'stop sign': 'señal de stop',
+                'parking meter': 'parquímetro',
+                'bench': 'banco',
+                'bird': 'pájaro',
+                'cat': 'gato',
+                'dog': 'perro',
+                'horse': 'caballo',
+                'sheep': 'oveja',
+                'cow': 'vaca',
+                'elephant': 'elefante',
+                'bear': 'oso',
+                'zebra': 'cebra',
+                'giraffe': 'jirafa',
+                'couch': 'sofá',
+                # Añade más traducciones según sea necesario
+            }
+
+        def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
             img = frame.to_ndarray(format="bgr24")
             
             # Perform object detection
             results = model(img, conf=conf)
-            
-            # Log detection results
-            logging.info(f"Detected objects: {[model.names[int(box.cls[0])] for r in results for box in r.boxes]}")
             
             # Translate labels to Spanish
             for r in results:
                 for box in r.boxes:
                     class_id = int(box.cls[0])
                     original_name = model.names[class_id].lower()
-                    translated_name = TRANSLATIONS.get(original_name, original_name)
+                    translated_name = self.TRANSLATIONS.get(original_name, original_name)
                     logging.info(f"Translating {original_name} to {translated_name}")
-                    model.names[class_id] = translated_name
-            
-            # Plot the detected objects on the image
-            annotated_frame = results[0].plot()
-            
-            return av.VideoFrame.from_ndarray(annotated_frame, format="bgr24")
+                    
+                    # Directly modify the label for this detection
+                    box.label = translated_name
+
+            # Plot the detected objects on the image with translated labels
+            for r in results:
+                boxes = r.boxes
+                for box in boxes:
+                    b = box.xyxy[0].tolist()
+                    c = box.cls
+                    label = box.label  # Use the translated label we set earlier
+                    img = cv2.rectangle(img, (int(b[0]), int(b[1])), (int(b[2]), int(b[3])), (0, 255, 0), 2)
+                    img = cv2.putText(img, f"{label} {float(box.conf):.2f}", 
+                                      (int(b[0]), int(b[1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+
+            return av.VideoFrame.from_ndarray(img, format="bgr24")
 
     webrtc_ctx = webrtc_streamer(
         key="object-detection",
