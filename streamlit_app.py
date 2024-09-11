@@ -8,7 +8,7 @@ import streamlit as st
 # Local Modules
 import settings
 import helper
-from settings impor load_model
+from settings import load_model
 
 # Setting page layout
 st.set_page_config(
