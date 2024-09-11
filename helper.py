@@ -7,6 +7,8 @@ from PIL import Image
 import numpy as np
 from streamlit_webrtc import webrtc_streamer, WebRtcMode
 import av
+import logging
+logging.basicConfig(level=logging.INFO)
 
 TRANSLATIONS = {
     'person': 'persona',
@@ -204,14 +206,17 @@ def play_webcam(conf, model):
             # Perform object detection
             results = model(img, conf=conf)
             
+            # Log detection results
+            logging.info(f"Detected objects: {[model.names[int(box.cls[0])] for r in results for box in r.boxes]}")
+            
             # Translate labels to Spanish
             for r in results:
                 for box in r.boxes:
                     class_id = int(box.cls[0])
-                    original_name = model.names[class_id]
-                    translated_name = TRANSLATIONS.get(original_name.lower(), original_name)
-                    box.cls[0] = list(TRANSLATIONS.keys()).index(original_name.lower())
-                    model.names[int(box.cls[0])] = translated_name
+                    original_name = model.names[class_id].lower()
+                    translated_name = TRANSLATIONS.get(original_name, original_name)
+                    logging.info(f"Translating {original_name} to {translated_name}")
+                    model.names[class_id] = translated_name
             
             # Plot the detected objects on the image
             annotated_frame = results[0].plot()
