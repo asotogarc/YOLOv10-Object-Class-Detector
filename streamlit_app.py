@@ -1,4 +1,4 @@
-E# File: streamlit_app.py
+# File: streamlit_app.py
 import streamlit as st
 from pathlib import Path
 import PIL
