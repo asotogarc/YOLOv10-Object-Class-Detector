@@ -28,13 +28,13 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-model_type = st.sidebar.radio("Select Task", ['Detection', 'Segmentation'])
+model_type = st.sidebar.radio("Select Task", ['YOLO'])
 confidence = float(st.sidebar.slider("Select Model Confidence", 25, 100, 40)) / 100
 
-if model_type == 'Detection':
+if model_type == 'YOLO':
     model_path = Path(settings.DETECTION_MODEL)
-elif model_type == 'Segmentation':
-    model_path = Path(settings.SEGMENTATION_MODEL)
+#elif model_type == 'Segmentation':
+#    model_path = Path(settings.SEGMENTATION_MODEL)
 
 try:
     model = helper.load_model(model_path)
