@@ -1,4 +1,4 @@
-# File: streamlit_app.py
+E# File: streamlit_app.py
 import streamlit as st
 from pathlib import Path
 import PIL
@@ -42,8 +42,8 @@ except Exception as ex:
     st.error(f"Unable to load model. Check the specified path: {model_path}")
     st.error(ex)
 
-st.sidebar.header("Image/Video Config")
-source_radio = st.sidebar.radio("Select Source", settings.SOURCES_LIST)
+st.sidebar.header("Modelo IA")
+source_radio = st.sidebar.radio("Red Neuronal convolucional", settings.SOURCES_LIST)
 
 if source_radio == settings.IMAGE:
     source_img = st.sidebar.file_uploader("Choose an image...", type=("jpg", "jpeg", "png", 'bmp', 'webp'))
