@@ -29,7 +29,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 model_type = st.sidebar.radio("Tipo coordenadas detección", ['YOLO'])
-# confidence = float(st.sidebar.slider("Select Model Confidence", 25, 100, 40)) / 100
+confidence = float(st.sidebar.slider("Select Model Confidence", 25, 100, 40)) / 100
 
 if model_type == 'YOLO':
     model_path = Path(settings.DETECTION_MODEL)
