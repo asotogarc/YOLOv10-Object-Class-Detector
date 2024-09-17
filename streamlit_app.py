@@ -43,7 +43,7 @@ except Exception as ex:
     st.error(ex)
 
 st.sidebar.header("Modelo IA")
-source_radio = st.sidebar.radio("Select source", settings.SOURCES_LIST)
+source_radio = st.sidebar.radio("Red neuronal convolucional", settings.SOURCES_LIST)
 
 if source_radio == settings.IMAGE:
     source_img = st.sidebar.file_uploader("Choose an image...", type=("jpg", "jpeg", "png", 'bmp', 'webp'))
